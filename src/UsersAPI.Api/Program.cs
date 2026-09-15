@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Prometheus;
 using UsersAPI.Application.Validators;
 using UsersAPI.Domain.Interfaces;
 using UsersAPI.Infrastructure.Authentication;
@@ -75,8 +76,14 @@ builder.Services.AddScoped<IEventPublisher, RabbitMqPublisher>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 
 // JWT Authentication
+builder.Services.AddHealthChecks();
+builder.Services.AddMetricServer(options =>
+{
+    options.Port = 9090;
+});
+
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey não configurada");
+var secretKey = jwtSettings["SecretKey"] ?? jwtSettings["Key"] ?? throw new InvalidOperationException("JWT SecretKey não configurada");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -101,6 +108,12 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
+    dbContext.Database.Migrate();
+}
+
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -113,10 +126,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseMetricServer();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHealthChecks("/health");
 app.MapControllers();
 
 app.Run();
