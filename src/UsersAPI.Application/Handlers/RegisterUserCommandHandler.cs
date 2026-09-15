@@ -21,26 +21,15 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, U
 
     public async Task<UserResponse> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
-        // Verificar se email já existe
         if (await _userRepository.EmailExistsAsync(request.Email))
         {
             throw new InvalidOperationException("Email já está em uso");
         }
-
-        // Hash da senha
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-
-        // Criar usuário
         var user = new User(request.Name, request.Email, passwordHash);
-
-        // Persistir no banco
         await _userRepository.AddAsync(user);
-
-        // Publicar evento UserCreatedEvent
         var userCreatedEvent = new UserCreatedEvent(user.Id, user.Name, user.Email);
         await _eventPublisher.PublishAsync(userCreatedEvent);
-
-        // Retornar resposta
         return new UserResponse
         {
             Id = user.Id,

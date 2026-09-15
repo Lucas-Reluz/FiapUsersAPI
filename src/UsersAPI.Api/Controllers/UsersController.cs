@@ -18,10 +18,6 @@ public class UsersController : ControllerBase
         _mediator = mediator;
         _logger = logger;
     }
-
-    /// <summary>
-    /// Busca usuário por ID
-    /// </summary>
     [HttpGet("{id:guid}")]
     [Authorize]
     public async Task<ActionResult<UserResponse>> GetById(Guid id)

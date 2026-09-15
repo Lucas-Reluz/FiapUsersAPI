@@ -12,11 +12,7 @@ using UsersAPI.Infrastructure.Messaging;
 using UsersAPI.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container
 builder.Services.AddControllers();
-
-// Configure Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -26,8 +22,6 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1",
         Description = "API de Gerenciamento de Usuários e Autenticação"
     });
-
-    // Configurar JWT no Swagger
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         Description = "JWT Authorization header usando o esquema Bearer. Exemplo: \"Authorization: Bearer {token}\"",
@@ -52,30 +46,18 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-
-// Configure Logging
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
-
-// Database Configuration
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<UsersDbContext>(options =>
     options.UseNpgsql(connectionString));
-
-// MediatR
 builder.Services.AddMediatR(cfg => 
     cfg.RegisterServicesFromAssembly(typeof(UsersAPI.Application.Commands.RegisterUserCommand).Assembly));
-
-// FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterUserCommandValidator>();
-
-// Dependency Injection
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEventPublisher, RabbitMqPublisher>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-
-// JWT Authentication
 builder.Services.AddHealthChecks();
 builder.Services.AddMetricServer(options =>
 {
@@ -113,8 +95,6 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
     dbContext.Database.Migrate();
 }
-
-// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

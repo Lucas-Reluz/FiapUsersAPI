@@ -18,26 +18,19 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
 
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        // Buscar usuário por email
         var user = await _userRepository.GetByEmailAsync(request.Email);
 
         if (user == null)
         {
             throw new UnauthorizedAccessException("Email ou senha inválidos");
         }
-
-        // Verificar senha
         var isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
 
         if (!isPasswordValid)
         {
             throw new UnauthorizedAccessException("Email ou senha inválidos");
         }
-
-        // Gerar JWT
         var token = _jwtService.GenerateToken(user);
-
-        // Retornar resposta
         return new LoginResponse
         {
             Token = token,

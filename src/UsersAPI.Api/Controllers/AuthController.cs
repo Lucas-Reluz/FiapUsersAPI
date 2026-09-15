@@ -17,10 +17,6 @@ public class AuthController : ControllerBase
         _mediator = mediator;
         _logger = logger;
     }
-
-    /// <summary>
-    /// Registra um novo usuário
-    /// </summary>
     [HttpPost("register")]
     public async Task<ActionResult<UserResponse>> Register([FromBody] RegisterRequest request)
     {
@@ -46,10 +42,6 @@ public class AuthController : ControllerBase
             return StatusCode(500, new { error = "Erro interno ao processar requisição" });
         }
     }
-
-    /// <summary>
-    /// Realiza login e retorna JWT
-    /// </summary>
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
     {
